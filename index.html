@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YT Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --card: #161616;
+    --border: #222222;
+    --red: #ff2d2d;
+    --red-dim: #ff2d2d22;
+    --text: #f0f0f0;
+    --muted: #666;
+    --hover: #1e1e1e;
+    --radius: 8px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NOISE TEXTURE */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+  /* HEADER */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 18px 0;
+    position: sticky;
+    top: 0;
+    background: rgba(10,10,10,0.95);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .logo span { color: var(--red); }
+
+  /* SEARCH */
+  .search-bar {
+    flex: 1;
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .search-bar:focus-within {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px var(--red-dim);
+  }
+
+  .search-bar input {
+    flex: 1;
+    background: var(--surface);
+    border: none;
+    padding: 10px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+  }
+
+  .search-bar input::placeholder { color: var(--muted); }
+
+  .search-bar button {
+    background: var(--red);
+    border: none;
+    padding: 10px 18px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 16px;
+    transition: opacity 0.2s;
+  }
+
+  .search-bar button:hover { opacity: 0.85; }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    padding: 16px 0 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+
+  .tab {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 4px 4px 0 0;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+  }
+
+  .tab.active {
+    color: var(--text);
+    border-bottom-color: var(--red);
+  }
+
+  .tab:hover:not(.active) { color: #aaa; }
+
+  /* SECTION LABEL */
+  .section-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .section-label span { color: var(--text); }
+
+  /* GRID */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    animation: fadeIn 0.3s ease both;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    border-color: #333;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .thumb-wrap {
+    position: relative;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+    background: #111;
+  }
+
+  .thumb-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+  }
+
+  .card:hover .thumb-wrap img { transform: scale(1.04); }
+
+  .duration {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    background: rgba(0,0,0,0.85);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.3px;
+  }
+
+  .play-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,45,45,0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+  }
+
+  .card:hover .play-overlay { background: rgba(255,45,45,0.15); }
+
+  .play-icon {
+    width: 44px;
+    height: 44px;
+    background: rgba(255,45,45,0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.2s;
+  }
+
+  .card:hover .play-icon { opacity: 1; transform: scale(1); }
+
+  .play-icon svg { width: 18px; height: 18px; fill: #fff; margin-left: 3px; }
+
+  .card-body { padding: 12px; }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  .card-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .card-channel {
+    font-size: 12px;
+    color: #888;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-stats {
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    gap: 6px;
+  }
+
+  .card-stats span::after { content: '·'; margin-left: 6px; }
+  .card-stats span:last-child::after { content: ''; }
+
+  /* MODAL PLAYER */
+  .modal-bg {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeBg 0.2s ease;
+  }
+
+  @keyframes fadeBg { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal {
+    width: 100%;
+    max-width: 800px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    animation: slideUp 0.25s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .modal-video {
+    aspect-ratio: 16/9;
+    width: 100%;
+  }
+
+  .modal-video iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+  }
+
+  .modal-info { padding: 16px 20px 20px; }
+
+  .modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+
+  .modal-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .modal-channel {
+    font-size: 13px;
+    color: #888;
+    font-weight: 500;
+  }
+
+  .modal-stats { font-size: 12px; color: var(--muted); }
+
+  .modal-actions { display: flex; gap: 8px; }
+
+  .btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 7px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .btn-ghost { background: transparent; color: #aaa; }
+  .btn-ghost:hover { background: var(--hover); color: var(--text); }
+  .btn-red { background: var(--red); color: #fff; border-color: var(--red); }
+  .btn-red:hover { opacity: 0.85; }
+
+  .modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(0,0,0,0.7);
+    border: none;
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  .modal-wrap { position: relative; }
+
+  /* SKELETON */
+  .skeleton {
+    background: linear-gradient(90deg, var(--card) 25%, var(--hover) 50%, var(--card) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: var(--radius);
+  }
+
+  @keyframes shimmer { to { background-position: -200% 0; } }
+
+  .skel-thumb { aspect-ratio: 16/9; width: 100%; }
+  .skel-title { height: 14px; width: 90%; margin: 12px 12px 6px; border-radius: 4px; }
+  .skel-sub { height: 12px; width: 60%; margin: 0 12px 12px; border-radius: 4px; }
+
+  /* STATE */
+  .state-msg {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--muted);
+  }
+
+  .state-msg .icon { font-size: 48px; margin-bottom: 12px; }
+  .state-msg p { font-size: 14px; }
+  .state-msg strong { color: var(--text); }
+
+  /* SCROLL TOP */
+  .scroll-top {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--red);
+    color: #fff;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    z-index: 150;
+  }
+
+  .scroll-top.show { opacity: 1; pointer-events: all; }
+
+  @media (max-width: 600px) {
+    .logo { font-size: 22px; }
+    .grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .modal { border-radius: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="header-inner">
+      <div class="logo">YT<span>.</span>EX</div>
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Cari video, channel, topik..." />
+        <button onclick="doSearch()">⌕</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('trending', this)">🔥 Trending</button>
+    <button class="tab" onclick="switchTab('search', this)" id="searchTab" style="display:none">🔍 Hasil Pencarian</button>
+  </div>
+
+  <div id="sectionLabel" class="section-label"><span>TRENDING</span> INDONESIA</div>
+
+  <div class="grid" id="grid"></div>
+  <div id="stateMsg" class="state-msg" style="display:none"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modalBg" style="display:none" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-wrap">
+      <button class="modal-close" onclick="closeModal()">×</button>
+      <div class="modal-video">
+        <iframe id="player" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+      </div>
+    </div>
+    <div class="modal-info">
+      <div class="modal-title" id="modalTitle"></div>
+      <div class="modal-meta">
+        <div>
+          <div class="modal-channel" id="modalChannel"></div>
+          <div class="modal-stats" id="modalStats"></div>
+        </div>
+        <div class="modal-actions">
+          <a class="btn btn-ghost" id="modalYtLink" target="_blank" href="#">↗ YouTube</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+  const API = 'https://yt-client-nine.vercel.app';
+  let currentTab = 'trending';
+
+  // Fix duration "45.01" → "45:01"
+  function fixDur(d) {
+    if (!d) return '';
+    return String(d).replace(/\./g, ':');
+  }
+
+  // Skeleton cards
+  function showSkeletons(n = 12) {
+    const grid = document.getElementById('grid');
+    grid.innerHTML = Array(n).fill(0).map(() => `
+      <div class="card" style="cursor:default;pointer-events:none">
+        <div class="skeleton skel-thumb"></div>
+        <div class="skeleton skel-title"></div>
+        <div class="skeleton skel-sub"></div>
+      </div>`).join('');
+  }
+
+  function showState(icon, html) {
+    document.getElementById('grid').innerHTML = '';
+    const el = document.getElementById('stateMsg');
+    el.style.display = 'block';
+    el.innerHTML = `<div class="icon">${icon}</div><p>${html}</p>`;
+  }
+
+  function hideState() {
+    document.getElementById('stateMsg').style.display = 'none';
+  }
+
+  // Render cards
+  function renderCards(items, delay = 0) {
+    hideState();
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    if (!items.length) { showState('😶', 'Tidak ada hasil.'); return; }
+    items.forEach((v, i) => {
+      const dur = fixDur(v.duration);
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.style.animationDelay = `${i * 40}ms`;
+      card.innerHTML = `
+        <div class="thumb-wrap">
+          <img src="${v.thumbnail}" alt="" loading="lazy" onerror="this.src='https://i.ytimg.com/vi/${v.videoId}/default.jpg'">
+          ${dur ? `<div class="duration">${dur}</div>` : ''}
+          <div class="play-overlay">
+            <div class="play-icon">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-title">${escHtml(v.title)}</div>
+          <div class="card-meta">
+            <div class="card-channel">${escHtml(v.channel)}</div>
+            <div class="card-stats">
+              ${v.views ? `<span>${v.views}</span>` : ''}
+              ${v.published ? `<span>${v.published}</span>` : ''}
+            </div>
+          </div>
+        </div>`;
+      card.addEventListener('click', () => openModal(v));
+      grid.appendChild(card);
+    });
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Load trending
+  async function loadTrending() {
+    showSkeletons();
+    document.getElementById('sectionLabel').innerHTML = '<span>TRENDING</span> INDONESIA';
+    try {
+      const r = await fetch(`${API}/api/trending?region=ID&limit=24`);
+      const data = await r.json();
+      renderCards(data.results || []);
+    } catch(e) {
+      showState('⚠️', `Gagal memuat: <strong>${e.message}</strong>`);
+    }
+  }
+
+  // Search
+  async function doSearch() {
+    const q = document.getElementById('searchInput').value.trim();
+    if (!q) return;
+
+    switchTabTo('search');
+    document.getElementById('sectionLabel').innerHTML = `HASIL UNTUK <span>"${escHtml(q)}"</span>`;
+    showSkeletons(10);
+
+    try {
+      const r = await fetch(`${API}/api/search?q=${encodeURIComponent(q)}&limit=20`);
+      const data = await r.json();
+      renderCards(data.results || []);
+    } catch(e) {
+      showState('⚠️', `Gagal: <strong>${e.message}</strong>`);
+    }
+  }
+
+  // Tab switching
+  function switchTab(tab, el) {
+    currentTab = tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    if (tab === 'trending') loadTrending();
+  }
+
+  function switchTabTo(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    const searchTab = document.getElementById('searchTab');
+    searchTab.style.display = '';
+    searchTab.classList.add('active');
+    document.querySelector('.tab:first-child').classList.remove('active');
+  }
+
+  // Modal
+  function openModal(v) {
+    document.getElementById('player').src =
+      `https://www.youtube.com/embed/${v.videoId}?autoplay=1&rel=0`;
+    document.getElementById('modalTitle').textContent = v.title;
+    document.getElementById('modalChannel').textContent = v.channel;
+    document.getElementById('modalStats').textContent =
+      [v.views, v.published].filter(Boolean).join(' · ');
+    document.getElementById('modalYtLink').href = v.url;
+    document.getElementById('modalBg').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal(e) {
+    if (e && e.target !== document.getElementById('modalBg') &&
+        !e.target.classList.contains('modal-close')) return;
+    document.getElementById('player').src = '';
+    document.getElementById('modalBg').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal({target: document.getElementById('modalBg')});
+    if (e.key === 'Enter' && document.activeElement === document.getElementById('searchInput')) doSearch();
+  });
+
+  // Scroll top button
+  window.addEventListener('scroll', () => {
+    document.getElementById('scrollTop').classList.toggle('show', window.scrollY > 400);
+  });
+
+  // Init
+  loadTrending();
+</script>
+</body>
+</html>
