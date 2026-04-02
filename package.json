@@ -1,0 +1,14 @@
+{
+  "name": "yt-scraper",
+  "version": "1.0.0",
+  "description": "YouTube scraper API using Innertube (no API key required)",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12",
+    "ytdl-core": "^4.11.5"
+  }
+}
