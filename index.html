@@ -1,545 +1,390 @@
-<!DOCTYPE html>
-<html lang="id">
+<!DOCTYPE html><html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>YT Explorer</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0a0a;
-    --surface: #111111;
-    --card: #161616;
-    --border: #222222;
-    --red: #ff2d2d;
-    --red-dim: #ff2d2d22;
-    --text: #f0f0f0;
-    --muted: #666;
-    --hover: #1e1e1e;
-    --radius: 8px;
-  }
+    --bg: #0b0d12;
+    --bg2: #11151d;
+    --surface: rgba(18, 22, 31, 0.82);
+    --surface-strong: #151a24;
+    --card: rgba(18, 22, 31, 0.9);
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.12);
+    --text: #f4f7fb;
+    --muted: #99a3b3;
+    --muted-2: #758093;
+    --red: #ff3252;
+    --red-soft: rgba(255, 50, 82, 0.16);
+    --green: #2dd4bf;
+    --shadow: 0 16px 50px rgba(0, 0, 0, 0.38);
+    --shadow-soft: 0 8px 24px rgba(0,0,0,0.24);
+    --radius: 18px;
+  }{ box-sizing: border-box; } html, body { margin: 0; padding: 0; } body { min-height: 100vh; color: var(--text); font-family: 'DM Sans', sans-serif; background: radial-gradient(circle at top left, rgba(255,50,82,0.18), transparent 30%), radial-gradient(circle at top right, rgba(45,212,191,0.08), transparent 24%), linear-gradient(180deg, #090b10 0%, #0b0d12 45%, #0f131b 100%); overflow-x: hidden; }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+body::before { content: ''; position: fixed; inset: 0; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.12'/%3E%3C/svg%3E"); opacity: .18; mix-blend-mode: soft-light; z-index: 0; }
 
-  /* NOISE TEXTURE */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.4;
-  }
+.wrap { position: relative; z-index: 1; max-width: 1240px; margin: 0 auto; padding: 0 16px; }
 
-  .wrap { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+.topbar { position: sticky; top: 0; z-index: 100; backdrop-filter: blur(16px); background: rgba(9, 11, 16, 0.72); border-bottom: 1px solid var(--border); }
 
-  /* HEADER */
-  header {
-    border-bottom: 1px solid var(--border);
-    padding: 18px 0;
-    position: sticky;
-    top: 0;
-    background: rgba(10,10,10,0.95);
-    backdrop-filter: blur(12px);
-    z-index: 100;
-  }
+.topbar-inner { display: flex; align-items: center; gap: 14px; padding: 16px 0; }
 
-  .header-inner {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-  }
+.brand { display: flex; flex-direction: column; gap: 2px; min-width: 132px; }
 
-  .logo {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 28px;
-    letter-spacing: 2px;
-    color: var(--text);
-    white-space: nowrap;
-  }
+.logo { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; font-size: 30px; line-height: 1; }
 
-  .logo span { color: var(--red); }
+.logo span { color: var(--red); }
 
-  /* SEARCH */
-  .search-bar {
-    flex: 1;
-    display: flex;
-    gap: 0;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    transition: border-color 0.2s;
-  }
+.subtitle { font-size: 11px; color: var(--muted); letter-spacing: .4px; text-transform: uppercase; }
 
-  .search-bar:focus-within {
-    border-color: var(--red);
-    box-shadow: 0 0 0 3px var(--red-dim);
-  }
+.search-form { flex: 1; display: flex; gap: 10px; align-items: center; }
 
-  .search-bar input {
-    flex: 1;
-    background: var(--surface);
-    border: none;
-    padding: 10px 16px;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    outline: none;
-  }
+.search-shell { flex: 1; display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 999px; padding: 10px 12px; transition: .2s ease; }
 
-  .search-bar input::placeholder { color: var(--muted); }
+.search-shell:focus-within { border-color: rgba(255,50,82,0.45); box-shadow: 0 0 0 4px rgba(255,50,82,0.12); }
 
-  .search-bar button {
-    background: var(--red);
-    border: none;
-    padding: 10px 18px;
-    color: #fff;
-    cursor: pointer;
-    font-size: 16px;
-    transition: opacity 0.2s;
-  }
+.search-icon { width: 18px; height: 18px; flex: 0 0 auto; opacity: .8; }
 
-  .search-bar button:hover { opacity: 0.85; }
+.search-input { flex: 1; border: none; outline: none; background: transparent; color: var(--text); font-size: 14px; font-family: inherit; }
 
-  /* TABS */
-  .tabs {
-    display: flex;
-    gap: 4px;
-    padding: 16px 0 0;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 28px;
-  }
+.search-input::placeholder { color: var(--muted-2); }
 
-  .tab {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    padding: 8px 16px;
-    border-radius: 4px 4px 0 0;
-    border: none;
-    background: transparent;
-    color: var(--muted);
-    cursor: pointer;
-    letter-spacing: 0.5px;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    transition: all 0.2s;
-  }
+.btn { border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text); border-radius: 999px; padding: 11px 16px; cursor: pointer; font-weight: 600; font-family: inherit; transition: .18s ease; white-space: nowrap; }
 
-  .tab.active {
-    color: var(--text);
-    border-bottom-color: var(--red);
-  }
+.btn:hover { transform: translateY(-1px); border-color: var(--border-strong); } .btn-primary { background: linear-gradient(180deg, #ff4b68 0%, #ff3252 100%); border-color: transparent; box-shadow: 0 10px 22px rgba(255,50,82,0.2); } .btn-primary:hover { filter: brightness(1.03); } .btn-ghost:hover { background: rgba(255,255,255,0.06); }
 
-  .tab:hover:not(.active) { color: #aaa; }
+.hero { display: grid; grid-template-columns: 1.7fr .9fr; gap: 16px; margin-top: 18px; margin-bottom: 14px; }
 
-  /* SECTION LABEL */
-  .section-label {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 22px;
-    letter-spacing: 2px;
-    color: var(--muted);
-    margin-bottom: 16px;
-  }
+.hero-card { border: 1px solid var(--border); background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)); box-shadow: var(--shadow-soft); border-radius: var(--radius); padding: 18px; overflow: hidden; position: relative; }
 
-  .section-label span { color: var(--text); }
+.hero-card::after { content: ''; position: absolute; inset: auto -30px -60px auto; width: 180px; height: 180px; background: radial-gradient(circle, rgba(255,50,82,0.22), transparent 70%); pointer-events: none; }
 
-  /* GRID */
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 16px;
-  }
+.hero-kicker { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: #d7deea; text-transform: uppercase; letter-spacing: .5px; padding: 7px 10px; border: 1px solid rgba(255,255,255,0.08); border-radius: 999px; background: rgba(255,255,255,0.03); margin-bottom: 12px; }
 
-  /* CARD */
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    cursor: pointer;
-    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
-    animation: fadeIn 0.3s ease both;
-  }
+.hero-title { font-size: clamp(24px, 3.7vw, 42px); line-height: 1.05; font-weight: 800; margin: 0 0 8px; letter-spacing: -0.03em; }
 
-  .card:hover {
-    transform: translateY(-3px);
-    border-color: #333;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-  }
+.hero-title span { color: var(--red); }
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+.hero-desc { margin: 0; color: var(--muted); max-width: 62ch; line-height: 1.6; font-size: 14px; }
 
-  .thumb-wrap {
-    position: relative;
-    aspect-ratio: 16/9;
-    overflow: hidden;
-    background: #111;
-  }
+.hero-side { display: grid; gap: 12px; }
 
-  .thumb-wrap img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s;
-  }
+.stat { border: 1px solid var(--border); background: rgba(255,255,255,0.04); border-radius: var(--radius); padding: 16px; }
 
-  .card:hover .thumb-wrap img { transform: scale(1.04); }
+.stat-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px; }
 
-  .duration {
-    position: absolute;
-    bottom: 6px;
-    right: 6px;
-    background: rgba(0,0,0,0.85);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 2px 6px;
-    border-radius: 3px;
-    letter-spacing: 0.3px;
-  }
+.stat-value { font-size: 22px; font-weight: 800; line-height: 1.1; }
 
-  .play-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(255,45,45,0);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-  }
+.stat-sub { color: var(--muted); font-size: 13px; margin-top: 6px; }
 
-  .card:hover .play-overlay { background: rgba(255,45,45,0.15); }
+.tabs-row { display: flex; gap: 8px; align-items: center; margin: 14px 0 16px; overflow-x: auto; padding-bottom: 2px; }
 
-  .play-icon {
-    width: 44px;
-    height: 44px;
-    background: rgba(255,45,45,0.9);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transform: scale(0.8);
-    transition: all 0.2s;
-  }
+.tab { border: 1px solid var(--border); background: rgba(255,255,255,0.03); color: #d9e0ea; border-radius: 999px; padding: 10px 14px; cursor: pointer; font-family: inherit; font-weight: 600; white-space: nowrap; transition: .18s ease; }
 
-  .card:hover .play-icon { opacity: 1; transform: scale(1); }
+.tab.active { background: rgba(255,50,82,0.14); border-color: rgba(255,50,82,0.28); color: #fff; }
 
-  .play-icon svg { width: 18px; height: 18px; fill: #fff; margin-left: 3px; }
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 14px; }
 
-  .card-body { padding: 12px; }
+.section-label { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; font-size: 24px; color: #d7deea; }
 
-  .card-title {
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    margin-bottom: 8px;
-    color: var(--text);
-  }
+.section-label span { color: var(--red); }
 
-  .card-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
+.hint { color: var(--muted); font-size: 13px; }
 
-  .card-channel {
-    font-size: 12px;
-    color: #888;
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; padding-bottom: 120px; }
 
-  .card-stats {
-    font-size: 11px;
-    color: var(--muted);
-    display: flex;
-    gap: 6px;
-  }
+.card { border: 1px solid var(--border); border-radius: 18px; overflow: hidden; background: var(--card); box-shadow: var(--shadow-soft); cursor: pointer; transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; animation: rise .35s ease both; }
 
-  .card-stats span::after { content: '·'; margin-left: 6px; }
-  .card-stats span:last-child::after { content: ''; }
+.card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.14); box-shadow: var(--shadow); }
 
-  /* MODAL PLAYER */
-  .modal-bg {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.92);
-    z-index: 200;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    animation: fadeBg 0.2s ease;
-  }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-  @keyframes fadeBg { from { opacity: 0; } to { opacity: 1; } }
+.thumb-wrap { position: relative; aspect-ratio: 16/9; background: #0f1219; overflow: hidden; }
 
-  .modal {
-    width: 100%;
-    max-width: 800px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-    animation: slideUp 0.25s ease;
-  }
+.thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s ease; }
 
-  @keyframes slideUp {
-    from { transform: translateY(30px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
+.card:hover .thumb-wrap img { transform: scale(1.04); }
 
-  .modal-video {
-    aspect-ratio: 16/9;
-    width: 100%;
-  }
+.duration { position: absolute; right: 8px; bottom: 8px; padding: 4px 7px; border-radius: 8px; background: rgba(0,0,0,0.78); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .2px; z-index: 2; }
 
-  .modal-video iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-    display: block;
-  }
+.play-overlay { position: absolute; inset: 0; display: grid; place-items: center; background: linear-gradient(180deg, rgba(255,50,82,0.0), rgba(255,50,82,0.0)); transition: .18s ease; }
 
-  .modal-info { padding: 16px 20px 20px; }
+.card:hover .play-overlay { background: rgba(255,50,82,0.11); }
 
-  .modal-title {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 8px;
-    line-height: 1.4;
-  }
+.play-icon { width: 48px; height: 48px; border-radius: 50%; background: rgba(255,50,82,0.92); display: grid; place-items: center; opacity: 0; transform: scale(.85); transition: .18s ease; box-shadow: 0 10px 24px rgba(255,50,82,0.24); }
 
-  .modal-meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
+.card:hover .play-icon { opacity: 1; transform: scale(1); } .play-icon svg { width: 18px; height: 18px; fill: white; margin-left: 2px; }
 
-  .modal-channel {
-    font-size: 13px;
-    color: #888;
-    font-weight: 500;
-  }
+.card-body { padding: 12px 12px 14px; } .card-title { font-size: 14px; line-height: 1.45; font-weight: 700; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 9px; }
 
-  .modal-stats { font-size: 12px; color: var(--muted); }
+.card-meta { display: grid; gap: 4px; } .card-channel { font-size: 12px; color: #aeb7c6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .card-stats { font-size: 11px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; } .card-stats span::after { content: '•'; margin-left: 8px; color: var(--muted-2); } .card-stats span:last-child::after { content: ''; }
 
-  .modal-actions { display: flex; gap: 8px; }
+.state-msg { display: none; border: 1px solid var(--border); background: rgba(255,255,255,0.03); border-radius: var(--radius); padding: 28px 18px; text-align: center; color: var(--muted); box-shadow: var(--shadow-soft); }
 
-  .btn {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12px;
-    font-weight: 500;
-    padding: 7px 14px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    cursor: pointer;
-    transition: all 0.15s;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-  }
+.state-msg .icon { font-size: 42px; margin-bottom: 10px; } .state-msg strong { color: var(--text); } .state-actions { margin-top: 14px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 
-  .btn-ghost { background: transparent; color: #aaa; }
-  .btn-ghost:hover { background: var(--hover); color: var(--text); }
-  .btn-red { background: var(--red); color: #fff; border-color: var(--red); }
-  .btn-red:hover { opacity: 0.85; }
+.skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; } @keyframes shimmer { to { background-position: -200% 0; } } .skel-thumb { aspect-ratio: 16/9; width: 100%; } .skel-title, .skel-sub { border-radius: 999px; } .skel-title { height: 14px; width: 88%; margin: 12px 12px 8px; } .skel-sub { height: 12px; width: 62%; margin: 0 12px 12px; }
 
-  .modal-close {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: rgba(0,0,0,0.7);
-    border: none;
-    color: #fff;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    font-size: 18px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-  }
+.scroll-top { position: fixed; right: 18px; bottom: 18px; width: 42px; height: 42px; border: 1px solid var(--border); border-radius: 50%; background: rgba(18,22,31,0.9); color: white; cursor: pointer; opacity: 0; pointer-events: none; z-index: 130; transition: opacity .2s ease, transform .2s ease; box-shadow: var(--shadow-soft); } .scroll-top.show { opacity: 1; pointer-events: auto; } .scroll-top:hover { transform: translateY(-2px); }
 
-  .modal-wrap { position: relative; }
+/* Persistent mini player: keeps playing while browsing */ .player-dock { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%) translateY(140%); width: min(720px, calc(100vw - 24px)); background: rgba(17, 21, 29, 0.96); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow); overflow: hidden; z-index: 180; transition: transform .22s ease; backdrop-filter: blur(16px); } .player-dock.show { transform: translateX(-50%) translateY(0); }
 
-  /* SKELETON */
-  .skeleton {
-    background: linear-gradient(90deg, var(--card) 25%, var(--hover) 50%, var(--card) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.4s infinite;
-    border-radius: var(--radius);
-  }
+.player-dock-top { display: grid; grid-template-columns: 180px 1fr; gap: 14px; padding: 12px; }
 
-  @keyframes shimmer { to { background-position: -200% 0; } }
+.player-thumb { aspect-ratio: 16/9; border-radius: 14px; overflow: hidden; background: #0d1118; border: 1px solid rgba(255,255,255,0.06); }
 
-  .skel-thumb { aspect-ratio: 16/9; width: 100%; }
-  .skel-title { height: 14px; width: 90%; margin: 12px 12px 6px; border-radius: 4px; }
-  .skel-sub { height: 12px; width: 60%; margin: 0 12px 12px; border-radius: 4px; }
+.player-thumb iframe { width: 100%; height: 100%; border: 0; display: block; background: #000; }
 
-  /* STATE */
-  .state-msg {
-    text-align: center;
-    padding: 80px 20px;
-    color: var(--muted);
-  }
+.player-info { min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; }
 
-  .state-msg .icon { font-size: 48px; margin-bottom: 12px; }
-  .state-msg p { font-size: 14px; }
-  .state-msg strong { color: var(--text); }
+.player-title { font-weight: 800; font-size: 14px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-  /* SCROLL TOP */
-  .scroll-top {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: var(--red);
-    color: #fff;
-    border: none;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    font-size: 18px;
-    cursor: pointer;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s;
-    z-index: 150;
-  }
+.player-meta { color: var(--muted); font-size: 12px; line-height: 1.5; }
 
-  .scroll-top.show { opacity: 1; pointer-events: all; }
+.player-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-  @media (max-width: 600px) {
-    .logo { font-size: 22px; }
-    .grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-    .modal { border-radius: 8px; }
-  }
-</style>
+.player-dock button, .player-dock a { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+
+.player-bar { border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; background: rgba(255,255,255,0.02); color: #cfd8e5; font-size: 12px; }
+
+.mini-note { color: var(--muted); }
+
+.modal-backdrop { position: fixed; inset: 0; z-index: 170; background: rgba(0, 0, 0, 0.84); display: none; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(8px); } .modal-backdrop.show { display: flex; }
+
+.modal { width: min(980px, 100%); border: 1px solid var(--border); border-radius: 22px; overflow: hidden; background: #11151d; box-shadow: var(--shadow); position: relative; }
+
+.modal-video { aspect-ratio: 16/9; background: #000; }
+
+.modal-video iframe { width: 100%; height: 100%; display: block; border: 0; }
+
+.modal-info { padding: 16px 18px 18px; display: grid; gap: 12px; }
+
+.modal-title { font-size: 18px; font-weight: 800; line-height: 1.45; }
+
+.modal-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+
+.modal-channel { color: #aab4c5; font-size: 13px; font-weight: 600; } .modal-stats { color: var(--muted); font-size: 12px; margin-top: 4px; } .modal-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.close-x { position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.58); color: white; cursor: pointer; z-index: 1; font-size: 18px; }
+
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 12px; }
+
+.chip { padding: 8px 12px; border-radius: 999px; border: 1px solid var(--border); background: rgba(255,255,255,0.03); color: #dce3ee; font-size: 12px; font-weight: 600; }
+
+@media (max-width: 900px) { .hero { grid-template-columns: 1fr; } .topbar-inner { flex-wrap: wrap; } .brand { min-width: auto; } .search-form { width: 100%; } .player-dock-top { grid-template-columns: 1fr; } .player-thumb { max-width: 320px; } }
+
+@media (max-width: 620px) { .wrap { padding: 0 12px; } .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .card-title { font-size: 13px; } .player-dock { width: calc(100vw - 12px); } .player-actions .btn { flex: 1; } }
+
+@media (max-width: 420px) { .grid { grid-template-columns: 1fr 1fr; } } </style>
+
 </head>
 <body>
-
-<header>
-  <div class="wrap">
-    <div class="header-inner">
-      <div class="logo">YT<span>.</span>EX</div>
-      <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="Cari video, channel, topik..." />
-        <button onclick="doSearch()">⌕</button>
+  <div class="topbar">
+    <div class="wrap">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="logo">YT<span>.</span>EX</div>
+          <div class="subtitle">video explorer</div>
+        </div><form class="search-form" id="searchForm">
+      <div class="search-shell">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="M20 20l-3.5-3.5"></path>
+        </svg>
+        <input id="searchInput" class="search-input" type="text" placeholder="Cari video, channel, topik..." autocomplete="off" />
       </div>
-    </div>
+      <button class="btn btn-primary" type="submit">Cari</button>
+    </form>
   </div>
-</header>
-
-<div class="wrap">
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('trending', this)">🔥 Trending</button>
-    <button class="tab" onclick="switchTab('search', this)" id="searchTab" style="display:none">🔍 Hasil Pencarian</button>
-  </div>
-
-  <div id="sectionLabel" class="section-label"><span>TRENDING</span> INDONESIA</div>
-
-  <div class="grid" id="grid"></div>
-  <div id="stateMsg" class="state-msg" style="display:none"></div>
 </div>
 
-<!-- MODAL -->
-<div class="modal-bg" id="modalBg" style="display:none" onclick="closeModal(event)">
-  <div class="modal">
-    <div class="modal-wrap">
-      <button class="modal-close" onclick="closeModal()">×</button>
+  </div>  <div class="wrap">
+    <div class="hero">
+      <section class="hero-card">
+        <div class="hero-kicker">✨ lebih rapi • lebih cepat • lebih nyaman</div>
+        <h1 class="hero-title">UI yang <span>lebih enak</span> dipandang, dengan player yang tetap jalan saat kamu browsing.</h1>
+        <p class="hero-desc">Tampilan dibuat lebih bersih dan modern: spacing lebih lega, kartu lebih lembut, tombol lebih jelas, dan player dibuat model dock agar video tetap berjalan saat kamu pindah tab di halaman ini.</p>
+      </section><aside class="hero-side">
+    <div class="stat">
+      <div class="stat-label">Mode player</div>
+      <div class="stat-value">Dock + Modal</div>
+      <div class="stat-sub">Video bisa tetap terbuka di bawah sambil kamu scroll dan cari video lain.</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Catatan</div>
+      <div class="stat-value">Background play</div>
+      <div class="stat-sub">Di desktop biasanya aman saat pindah tab. Di mobile, layar mati atau pindah aplikasi bisa tetap dibatasi browser/YouTube.</div>
+    </div>
+  </aside>
+</div>
+
+<div class="tabs-row">
+  <button class="tab active" id="tabTrending" onclick="setTab('trending')">🔥 Trending</button>
+  <button class="tab" id="tabSearch" onclick="setTab('search')">🔎 Hasil Pencarian</button>
+  <button class="tab" onclick="scrollToGrid()">⬇️ Lihat hasil</button>
+</div>
+
+<div class="section-head">
+  <div class="section-label" id="sectionLabel"><span>TRENDING</span> INDONESIA</div>
+  <div class="hint" id="resultHint">Memuat data…</div>
+</div>
+
+<div class="chips" id="chips">
+  <span class="chip">Auto fallback saat trending error</span>
+  <span class="chip">Player dock tidak menutup video</span>
+  <span class="chip">Search Enter support</span>
+</div>
+
+<div id="stateMsg" class="state-msg"></div>
+<div id="grid" class="grid"></div>
+
+  </div>  <div class="modal-backdrop" id="modalBackdrop" onclick="closeModal(event)">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Video player">
+      <button class="close-x" onclick="closeModal()" aria-label="Tutup">×</button>
       <div class="modal-video">
-        <iframe id="player" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        <iframe id="modalPlayer" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+      </div>
+      <div class="modal-info">
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-row">
+          <div>
+            <div class="modal-channel" id="modalChannel"></div>
+            <div class="modal-stats" id="modalStats"></div>
+          </div>
+          <div class="modal-actions">
+            <a class="btn btn-ghost" id="modalYtLink" target="_blank" rel="noreferrer">↗ YouTube</a>
+            <button class="btn btn-primary" onclick="minimizePlayer()">Minimize</button>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="modal-info">
-      <div class="modal-title" id="modalTitle"></div>
-      <div class="modal-meta">
+  </div>  <div class="player-dock" id="playerDock">
+    <div class="player-dock-top">
+      <div class="player-thumb">
+        <iframe id="dockPlayer" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+      </div>
+      <div class="player-info">
         <div>
-          <div class="modal-channel" id="modalChannel"></div>
-          <div class="modal-stats" id="modalStats"></div>
+          <div class="player-title" id="dockTitle"></div>
+          <div class="player-meta" id="dockMeta"></div>
         </div>
-        <div class="modal-actions">
-          <a class="btn btn-ghost" id="modalYtLink" target="_blank" href="#">↗ YouTube</a>
+        <div class="player-actions">
+          <a class="btn btn-ghost" id="dockYtLink" target="_blank" rel="noreferrer">↗ YouTube</a>
+          <button class="btn btn-ghost" onclick="expandPlayer()">Buka penuh</button>
+          <button class="btn btn-primary" onclick="closePlayer()">Tutup</button>
         </div>
       </div>
     </div>
-  </div>
-</div>
-
-<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+    <div class="player-bar">
+      <div class="mini-note">Video tetap hidup di dock selama halaman ini terbuka.</div>
+      <div class="mini-note" id="dockStatus">Siap dipakai</div>
+    </div>
+  </div><button class="scroll-top" id="scrollTop" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">↑</button>
 
 <script>
   const API = 'https://yt-client-nine.vercel.app';
   let currentTab = 'trending';
+  let currentVideo = null;
+  let playerMode = 'dock'; // dock | modal
 
-  // Fix duration "45.01" → "45:01"
+  const els = {
+    grid: document.getElementById('grid'),
+    stateMsg: document.getElementById('stateMsg'),
+    sectionLabel: document.getElementById('sectionLabel'),
+    resultHint: document.getElementById('resultHint'),
+    searchInput: document.getElementById('searchInput'),
+    tabTrending: document.getElementById('tabTrending'),
+    tabSearch: document.getElementById('tabSearch'),
+    scrollTop: document.getElementById('scrollTop'),
+    modalBackdrop: document.getElementById('modalBackdrop'),
+    modalPlayer: document.getElementById('modalPlayer'),
+    modalTitle: document.getElementById('modalTitle'),
+    modalChannel: document.getElementById('modalChannel'),
+    modalStats: document.getElementById('modalStats'),
+    modalYtLink: document.getElementById('modalYtLink'),
+    playerDock: document.getElementById('playerDock'),
+    dockPlayer: document.getElementById('dockPlayer'),
+    dockTitle: document.getElementById('dockTitle'),
+    dockMeta: document.getElementById('dockMeta'),
+    dockYtLink: document.getElementById('dockYtLink'),
+    dockStatus: document.getElementById('dockStatus')
+  };
+
+  function escHtml(s) {
+    return String(s ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function fixDur(d) {
     if (!d) return '';
     return String(d).replace(/\./g, ':');
   }
 
-  // Skeleton cards
+  function setTab(tab) {
+    currentTab = tab;
+    els.tabTrending.classList.toggle('active', tab === 'trending');
+    els.tabSearch.classList.toggle('active', tab === 'search');
+    if (tab === 'trending') {
+      els.sectionLabel.innerHTML = '<span>TRENDING</span> INDONESIA';
+    }
+  }
+
+  function scrollToGrid() {
+    document.getElementById('grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   function showSkeletons(n = 12) {
-    const grid = document.getElementById('grid');
-    grid.innerHTML = Array(n).fill(0).map(() => `
+    els.stateMsg.style.display = 'none';
+    els.grid.innerHTML = Array.from({ length: n }).map(() => `
       <div class="card" style="cursor:default;pointer-events:none">
         <div class="skeleton skel-thumb"></div>
         <div class="skeleton skel-title"></div>
         <div class="skeleton skel-sub"></div>
-      </div>`).join('');
+      </div>
+    `).join('');
   }
 
-  function showState(icon, html) {
-    document.getElementById('grid').innerHTML = '';
-    const el = document.getElementById('stateMsg');
-    el.style.display = 'block';
-    el.innerHTML = `<div class="icon">${icon}</div><p>${html}</p>`;
+  function showState(icon, html, actions = '') {
+    els.grid.innerHTML = '';
+    els.stateMsg.style.display = 'block';
+    els.stateMsg.innerHTML = `
+      <div class="icon">${icon}</div>
+      <div>${html}</div>
+      ${actions ? `<div class="state-actions">${actions}</div>` : ''}
+    `;
   }
 
   function hideState() {
-    document.getElementById('stateMsg').style.display = 'none';
+    els.stateMsg.style.display = 'none';
   }
 
-  // Render cards
-  function renderCards(items, delay = 0) {
+  function renderCards(items) {
     hideState();
-    const grid = document.getElementById('grid');
-    grid.innerHTML = '';
-    if (!items.length) { showState('😶', 'Tidak ada hasil.'); return; }
+    els.grid.innerHTML = '';
+    if (!Array.isArray(items) || items.length === 0) {
+      showState('😶', 'Tidak ada hasil yang bisa ditampilkan.', `<button class="btn btn-primary" onclick="loadTrending()">Coba lagi</button>`);
+      return;
+    }
+
     items.forEach((v, i) => {
-      const dur = fixDur(v.duration);
       const card = document.createElement('div');
       card.className = 'card';
-      card.style.animationDelay = `${i * 40}ms`;
+      card.style.animationDelay = `${i * 28}ms`;
+      const dur = fixDur(v.duration);
+      const thumb = v.thumbnail || `https://i.ytimg.com/vi/${v.videoId}/hqdefault.jpg`;
+
       card.innerHTML = `
         <div class="thumb-wrap">
-          <img src="${v.thumbnail}" alt="" loading="lazy" onerror="this.src='https://i.ytimg.com/vi/${v.videoId}/default.jpg'">
-          ${dur ? `<div class="duration">${dur}</div>` : ''}
+          <img src="${thumb}" alt="" loading="lazy" onerror="this.src='https://i.ytimg.com/vi/${v.videoId}/hqdefault.jpg'">
+          ${dur ? `<div class="duration">${escHtml(dur)}</div>` : ''}
           <div class="play-overlay">
             <div class="play-icon">
               <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -551,102 +396,167 @@
           <div class="card-meta">
             <div class="card-channel">${escHtml(v.channel)}</div>
             <div class="card-stats">
-              ${v.views ? `<span>${v.views}</span>` : ''}
-              ${v.published ? `<span>${v.published}</span>` : ''}
+              ${v.views ? `<span>${escHtml(v.views)}</span>` : ''}
+              ${v.published ? `<span>${escHtml(v.published)}</span>` : ''}
             </div>
           </div>
-        </div>`;
-      card.addEventListener('click', () => openModal(v));
-      grid.appendChild(card);
+        </div>
+      `;
+      card.addEventListener('click', () => openVideo(v));
+      els.grid.appendChild(card);
     });
   }
 
-  function escHtml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  // Load trending
-  async function loadTrending() {
-    showSkeletons();
-    document.getElementById('sectionLabel').innerHTML = '<span>TRENDING</span> INDONESIA';
+  async function fetchJson(url) {
+    const r = await fetch(url, { cache: 'no-store' });
+    const text = await r.text();
+    if (!r.ok) throw new Error(text || `HTTP ${r.status}`);
     try {
-      const r = await fetch(`${API}/api/trending?region=ID&limit=24`);
-      const data = await r.json();
-      renderCards(data.results || []);
-    } catch(e) {
-      showState('⚠️', `Gagal memuat: <strong>${e.message}</strong>`);
+      return JSON.parse(text);
+    } catch {
+      throw new Error('Respons API bukan JSON valid.');
     }
   }
 
-  // Search
+  async function loadTrending() {
+    setTab('trending');
+    els.resultHint.textContent = 'Memuat trending…';
+    showSkeletons(12);
+
+    try {
+      const data = await fetchJson(`${API}/api/trending?region=ID&limit=24`);
+      const results = data.results || data.items || (Array.isArray(data) ? data : []);
+      els.sectionLabel.innerHTML = '<span>TRENDING</span> INDONESIA';
+      els.resultHint.textContent = `${results.length} video ditemukan`;
+      renderCards(results);
+      return;
+    } catch (err) {
+      // fallback agar halaman tetap terasa hidup
+      try {
+        const fallback = await fetchJson(`${API}/api/search?q=trending indonesia&limit=24`);
+        const results = fallback.results || fallback.items || (Array.isArray(fallback) ? fallback : []);
+        els.sectionLabel.innerHTML = '<span>TRENDING</span> FALLBACK';
+        els.resultHint.textContent = `Trending error, menampilkan alternatif (${results.length})`;
+        renderCards(results);
+      } catch (fallbackErr) {
+        els.resultHint.textContent = 'Trending gagal dimuat';
+        showState('⚠️', `Trending error: <strong>${escHtml(err.message)}</strong>`, `
+          <button class="btn btn-primary" onclick="loadTrending()">Muat ulang</button>
+          <button class="btn btn-ghost" onclick="doSearchFromPrompt()">Cari video</button>
+        `);
+      }
+    }
+  }
+
+  async function doSearchFromPrompt() {
+    const q = prompt('Cari video apa?');
+    if (!q) return;
+    els.searchInput.value = q;
+    await doSearch();
+  }
+
   async function doSearch() {
-    const q = document.getElementById('searchInput').value.trim();
+    const q = els.searchInput.value.trim();
     if (!q) return;
 
-    switchTabTo('search');
-    document.getElementById('sectionLabel').innerHTML = `HASIL UNTUK <span>"${escHtml(q)}"</span>`;
+    setTab('search');
+    els.sectionLabel.innerHTML = `HASIL UNTUK <span>${escHtml(q)}</span>`;
+    els.resultHint.textContent = 'Mencari…';
     showSkeletons(10);
 
     try {
-      const r = await fetch(`${API}/api/search?q=${encodeURIComponent(q)}&limit=20`);
-      const data = await r.json();
-      renderCards(data.results || []);
-    } catch(e) {
-      showState('⚠️', `Gagal: <strong>${e.message}</strong>`);
+      const data = await fetchJson(`${API}/api/search?q=${encodeURIComponent(q)}&limit=20`);
+      const results = data.results || data.items || (Array.isArray(data) ? data : []);
+      els.resultHint.textContent = `${results.length} hasil ditemukan`;
+      renderCards(results);
+    } catch (err) {
+      els.resultHint.textContent = 'Pencarian gagal';
+      showState('⚠️', `Gagal memuat hasil: <strong>${escHtml(err.message)}</strong>`, `
+        <button class="btn btn-primary" onclick="doSearch()">Coba lagi</button>
+        <button class="btn btn-ghost" onclick="loadTrending()">Kembali trending</button>
+      `);
     }
   }
 
-  // Tab switching
-  function switchTab(tab, el) {
-    currentTab = tab;
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    el.classList.add('active');
-    if (tab === 'trending') loadTrending();
+  function updateDock(v) {
+    currentVideo = v;
+    els.dockTitle.textContent = v.title || '';
+    els.dockMeta.textContent = [v.channel, v.views, v.published].filter(Boolean).join(' · ');
+    els.dockYtLink.href = v.url || '#';
+    els.dockStatus.textContent = 'Sedang diputar';
+    els.playerDock.classList.add('show');
+    els.dockPlayer.src = `https://www.youtube.com/embed/${v.videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
   }
 
-  function switchTabTo(tab) {
-    currentTab = tab;
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    const searchTab = document.getElementById('searchTab');
-    searchTab.style.display = '';
-    searchTab.classList.add('active');
-    document.querySelector('.tab:first-child').classList.remove('active');
+  function openVideo(v) {
+    updateDock(v);
+    playerMode = 'dock';
+    els.modalBackdrop.classList.remove('show');
   }
 
-  // Modal
-  function openModal(v) {
-    document.getElementById('player').src =
-      `https://www.youtube.com/embed/${v.videoId}?autoplay=1&rel=0`;
-    document.getElementById('modalTitle').textContent = v.title;
-    document.getElementById('modalChannel').textContent = v.channel;
-    document.getElementById('modalStats').textContent =
-      [v.views, v.published].filter(Boolean).join(' · ');
-    document.getElementById('modalYtLink').href = v.url;
-    document.getElementById('modalBg').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
+  function minimizePlayer() {
+    if (!currentVideo) return;
+    playerMode = 'dock';
+    els.modalBackdrop.classList.remove('show');
+    updateDock(currentVideo);
+  }
+
+  function expandPlayer() {
+    if (!currentVideo) return;
+    playerMode = 'modal';
+    els.modalTitle.textContent = currentVideo.title || '';
+    els.modalChannel.textContent = currentVideo.channel || '';
+    els.modalStats.textContent = [currentVideo.views, currentVideo.published].filter(Boolean).join(' · ');
+    els.modalYtLink.href = currentVideo.url || '#';
+    els.modalPlayer.src = `https://www.youtube.com/embed/${currentVideo.videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
+    els.modalBackdrop.classList.add('show');
+  }
+
+  function closePlayer() {
+    currentVideo = null;
+    els.dockPlayer.src = '';
+    els.modalPlayer.src = '';
+    els.playerDock.classList.remove('show');
+    els.modalBackdrop.classList.remove('show');
+    els.dockStatus.textContent = 'Siap dipakai';
   }
 
   function closeModal(e) {
-    if (e && e.target !== document.getElementById('modalBg') &&
-        !e.target.classList.contains('modal-close')) return;
-    document.getElementById('player').src = '';
-    document.getElementById('modalBg').style.display = 'none';
-    document.body.style.overflow = '';
+    if (e && e.target !== els.modalBackdrop) return;
+    els.modalBackdrop.classList.remove('show');
+    els.modalPlayer.src = '';
+    playerMode = 'dock';
   }
 
-  // Keyboard
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeModal({target: document.getElementById('modalBg')});
-    if (e.key === 'Enter' && document.activeElement === document.getElementById('searchInput')) doSearch();
+  document.getElementById('searchForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    doSearch();
   });
 
-  // Scroll top button
+  els.searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') els.searchInput.blur();
+  });
+
   window.addEventListener('scroll', () => {
-    document.getElementById('scrollTop').classList.toggle('show', window.scrollY > 400);
+    els.scrollTop.classList.toggle('show', window.scrollY > 420);
   });
 
-  // Init
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (els.modalBackdrop.classList.contains('show')) {
+        closeModal({ target: els.modalBackdrop });
+      }
+    }
+  });
+
+  // Jangan pause otomatis saat halaman kehilangan fokus.
+  // Ini membantu video tetap jalan ketika user pindah ke tab lain di desktop.
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && currentVideo) {
+      els.dockStatus.textContent = 'Masih diputar';
+    }
+  });
+
   loadTrending();
-</script>
-</body>
+</script></body>
 </html>
